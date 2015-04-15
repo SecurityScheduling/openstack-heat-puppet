@@ -13,6 +13,11 @@ parameters:
     type: string
     default: ashlar-net
 
+  admin_user:
+    description: name of the admin user
+    type: string
+    default: ashlar
+
 resources:
   puppet:
     type: OS::Nova::Server
