@@ -1,0 +1,60 @@
+heat_template_version: 2013-05-23
+ 
+description: Puppet Training Stack
+
+parameters:
+  puppet_net:
+    description: name of network used to launch instance.
+    type: string
+    default: ashlar-net
+
+  agent_net:
+    description: name of network used to launch instance.
+    type: string
+    default: ashlar-net
+
+resources:
+  puppet:
+    type: OS::Nova::Server
+    properties:
+        key_name: ashlar-key
+        image: utopic-server-cloudimg-amd64
+        flavor: m1.xsmall
+        networks:
+            - network: {get_param: puppet_net}
+
+  puppet_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+        floating_network: ext-net
+
+  puppet_association:
+        type: OS::Neutron::FloatingIPAssociation
+        properties:
+            floatingip_id: { get_resource: puppet_floating_ip }
+            port_id: {get_attr: [puppet, addresses, {get_param: puppet_net}, 0, port]}
+
+  agent:
+    type: OS::Nova::Server
+    properties:
+      key_name: ashlar-key
+      image: utopic-server-cloudimg-amd64
+      flavor: m1.xsmall
+      networks:
+            - network: {get_param: agent_net}
+
+  agent_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+        floating_network: ext-net
+
+  agent_association:
+        type: OS::Neutron::FloatingIPAssociation
+        properties:
+            floatingip_id: { get_resource: agent_floating_ip }
+            port_id: {get_attr: [agent, addresses, {get_param: agent_net}, 0, port]}
+
+outputs:
+  puppet_public_ip:
+    description: Floating IP address of Puppet Master
+    value: { get_attr: [ puppet_floating_ip, floating_ip_address ] }
